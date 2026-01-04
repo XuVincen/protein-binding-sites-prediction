@@ -318,26 +318,21 @@ def train(batch, label_classify, p_x_all, p_edge_all, model, graph, ppi_list, lo
 def main():
     args = parser.parse_args()
     ppi_data = GNN_DATA(ppi_path=args.ppi_path)
-    # ppi_data = GNN_DATA(ppi_path='/apdcephfs/share_1364275/kaithgao/ppi/protein.actions.SHS148k.STRING.txt')
     ppi_data.get_feature_origin(pseq_path=args.pseq_path,
                                 vec_path=args.vec_path)
 
     ppi_data.generate_data()
-    ppi_data.split_dataset(train_valid_index_path='./train_val_split_data/train_val_split_1.json', random_new=True,
-                           mode=args.split)
     graph = ppi_data.data
     ppi_list = ppi_data.ppi_list
 
     graph.train_mask = ppi_data.ppi_split_dict['train_index']
     graph.val_mask = ppi_data.ppi_split_dict['valid_index']
 
-    # p_x_all = torch.load('./protein_info/x_list_ATP0918.pt')
+
     p_x_all = torch.load(args.p_feat_matrix)
-    # p_edge_all = np.load('./protein_info/edge_list_ATP0918.npy', allow_pickle=True)
     p_edge_all = np.load(args.p_adj_matrix, allow_pickle=True)
     p_x_all, x_num_index = multi2big_x(p_x_all)
     print(p_x_all.shape)
-    # p_x_all = p_x_all[:,torch.arange(p_x_all.size(1))!=6] 
     p_edge_all, edge_num_index = multi2big_edge(p_edge_all, x_num_index)
 
 
@@ -363,7 +358,6 @@ def main():
 
     graph.to(device)
 
-    # model = GIN_Net2(in_len=2000, in_feature=13, gin_in_feature=256, num_layers=1, pool_size=3, cnn_hidden=1).to(device)
     model = ppi_model()
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
@@ -372,7 +366,6 @@ def main():
     #
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10,
                                                            verbose=True)
-    # save_path = './result_save6'
     save_path = args.save_path
     loss_fn = nn.BCEWithLogitsLoss().to(device)
 
